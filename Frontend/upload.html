@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Resume</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="upload.html">Upload</a>
+    <a href="ranking.html">Ranking</a>
+  </nav>
+
+  <h1>Upload Resume</h1>
+
+  <form id="uploadForm">
+    <label>Candidate Name</label>
+    <input type="text" id="name" required />
+
+    <label>Job Description</label>
+    <textarea id="jobDesc" required></textarea>
+
+    <label>Resume (PDF)</label>
+    <input type="file" id="resume" accept=".pdf" required />
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script src="js/api.js"></script>
+  <script src="js/upload.js"></script>
+</body>
+</html>
