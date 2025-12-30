@@ -15,14 +15,16 @@
   <h1>Upload Resume</h1>
 
   <form id="uploadForm">
-    <label>Candidate Name</label>
-    <input type="text" id="name" required />
+    <label>Candidate Name (optional, will use parsed name if empty)</label>
+    <input type="text" id="name" />
 
-    <label>Job Description</label>
-    <textarea id="jobDesc" required></textarea>
+    <label>Job Skills (comma-separated)</label>
+    <input type="text" id="jobSkills" placeholder="Python, SQL, Django" />
 
-    <label>Resume (PDF)</label>
-    <input type="file" id="resume" accept=".pdf" required />
+    <label>Resume (PDF or TXT)</label>
+    <!-- <input type="file" id="resumeFile" accept=".pdf,.txt" required /> -->
+     <input type="file" id="resumeInput" />
+
 
     <button type="submit">Submit</button>
   </form>

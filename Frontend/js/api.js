@@ -1,4 +1,4 @@
-// Simulated database
+//Simulated database
 let candidates = JSON.parse(localStorage.getItem("candidates")) || [];
 
 function saveCandidates() {
