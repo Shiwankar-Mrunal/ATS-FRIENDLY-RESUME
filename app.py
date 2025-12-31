@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import PyPDF2
@@ -6,17 +5,19 @@ import docx
 import re
 import os
 
+# NLP
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 app = Flask(__name__)
-CORS(app, origins="*")  # Allow requests from any origin
+CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure folder exists
-
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ---------------- HELPER FUNCTIONS ----------------
 
 def extract_text(file_path, file_type):
-    """Extract text from PDF or DOCX files"""
     text = ""
     if file_type == 'pdf':
         with open(file_path, 'rb') as pdf_file:
@@ -31,95 +32,78 @@ def extract_text(file_path, file_type):
     return text
 
 
-def parse_resume(text):
-    """Parse resume text to extract details"""
-    # Extract email & phone
-    email = re.findall(r'\S+@\S+', text)
-    phone = re.findall(r'\+?\d[\d -]{8,}\d', text)
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    return text
 
-    # Extract name (first 2 words as heuristic)
-    words = text.strip().split()
-    name = " ".join(words[0:2]) if len(words) >= 2 else (words[0] if words else "")
 
-    # Skills
-    skills_list = [
-        "Python", "JavaScript", "HTML", "CSS",
-        "Flask", "Django", "Machine Learning", "Data Analysis"
-    ]
-    skills = [skill for skill in skills_list if skill.lower() in text.lower()]
+def calculate_similarity(resume_text, job_desc):
+    vectorizer = TfidfVectorizer(stop_words='english')
+    vectors = vectorizer.fit_transform([resume_text, job_desc])
+    similarity = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
+    return round(similarity * 100, 2)  # 0–100
 
-    # Education
-    education_keywords = ["Bachelor", "Master", "B.Sc", "B.E", "M.Sc", "MBA"]
-    education = [edu for edu in education_keywords if edu.lower() in text.lower()]
 
-    # Certifications
-    cert_keywords = ["AWS", "Azure", "Google Cloud", "PMP", "Scrum", "Cisco"]
-    certifications = [cert for cert in cert_keywords if cert.lower() in text.lower()]
+def keyword_match_score(resume_text, job_desc):
+    resume_words = set(resume_text.split())
+    jd_words = set(job_desc.split())
 
-    # Experience
-    lines = [line.strip() for line in text.split("\n") if line.strip()]
-    experience = [
-        line for line in lines
-        if "experience" in line.lower() or "year" in line.lower()
-    ]
+    matched = resume_words.intersection(jd_words)
+    if not jd_words:
+        return 0
 
-    return {
-        "name": name,
-        "email": email[0] if email else "",
-        "phone": phone[0] if phone else "",
-        "skills": skills,
-        "education": education,
-        "certifications": certifications,
-        "experience": experience
-    }
+    return round((len(matched) / len(jd_words)) * 100, 2)  # 0–100
 
+
+# ---------------- ROUTES ----------------
 
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
 
-@app.route("/scan", methods=["POST", "OPTIONS"])
+
+@app.route("/scan", methods=["POST"])
 def scan_resume():
-    """API endpoint to handle resume upload and return extracted details"""
-    print("SCAN ENDPOINT HIT")
-
-    if request.method == "OPTIONS":
-        return "", 200
-
-    # Check if file is present
     if 'resume' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
+        return jsonify({"error": "No resume uploaded"}), 400
 
     resume = request.files['resume']
+    job_desc = request.form.get("job_description", "")
+
+    if job_desc.strip() == "":
+        return jsonify({"error": "Job description missing"}), 400
+
     filename = os.path.join(UPLOAD_FOLDER, resume.filename)
     resume.save(filename)
-    print("File received:", resume.filename)
 
-    file_type = filename.split('.')[-1].lower()
+    file_type = resume.filename.split('.')[-1].lower()
     if file_type not in ['pdf', 'docx']:
         return jsonify({"error": "Unsupported file format"}), 400
 
-    # Extract text and parse
-    text = extract_text(filename, file_type)
-    result = parse_resume(text)
+    resume_text = extract_text(filename, file_type)
 
-    # Debug prints
-    print("Parsed Result:", result)
+    # Clean texts
+    resume_clean = clean_text(resume_text)
+    jd_clean = clean_text(job_desc)
 
-    # Return all details to frontend
+    # NLP Scores (0–100)
+    similarity_score = calculate_similarity(resume_clean, jd_clean)
+    keyword_score = keyword_match_score(resume_clean, jd_clean)
+
+    # ✅ FINAL ATS SCORE (EXPLICITLY IN TERMS OF 100)
+    ats_score = round(
+        ((similarity_score / 100) * 0.7 +
+         (keyword_score / 100) * 0.3) * 100,
+        2
+    )
+
     return jsonify({
-    "name": result["name"],
-    "email": result["email"],
-    "phone": result["phone"],
-    "skills": result["skills"],
-    "education": result["education"],
-    "experience": result["experience"],
-    "certifications": result["certifications"]
-})
+        "similarity_score": similarity_score,
+        "keyword_score": keyword_score,
+        "ats_score": ats_score
+    })
 
-
-
-# ---------------- RUN SERVER ----------------
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(debug=True)
