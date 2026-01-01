@@ -42,19 +42,19 @@ def calculate_similarity(resume_text, job_desc):
     vectorizer = TfidfVectorizer(stop_words='english')
     vectors = vectorizer.fit_transform([resume_text, job_desc])
     similarity = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
-    return round(similarity * 100, 2)  # 0–100
+    return round(similarity * 100, 2)
 
 
-def keyword_match_score(resume_text, job_desc):
-    resume_words = set(resume_text.split())
-    jd_words = set(job_desc.split())
+def extract_experience(resume_text):
+    # Find patterns like "5 years" or "3+ years"
+    matches = re.findall(r'(\d+)\s*\+?\s*years?', resume_text.lower())
+    if matches:
+        return max(int(m) for m in matches)
+    return 0
 
-    matched = resume_words.intersection(jd_words)
-    if not jd_words:
-        return 0
 
-    return round((len(matched) / len(jd_words)) * 100, 2)  # 0–100
-
+def get_missing_skills(resume_text, job_desc):
+    return sorted(list(set(job_desc.split()) - set(resume_text.split())))
 
 # ---------------- ROUTES ----------------
 
@@ -70,39 +70,56 @@ def scan_resume():
 
     resume = request.files['resume']
     job_desc = request.form.get("job_description", "")
+    role = request.form.get("role", "job_seeker")
 
     if job_desc.strip() == "":
         return jsonify({"error": "Job description missing"}), 400
 
-    filename = os.path.join(UPLOAD_FOLDER, resume.filename)
-    resume.save(filename)
+    filepath = os.path.join(UPLOAD_FOLDER, resume.filename)
+    resume.save(filepath)
 
     file_type = resume.filename.split('.')[-1].lower()
     if file_type not in ['pdf', 'docx']:
         return jsonify({"error": "Unsupported file format"}), 400
 
-    resume_text = extract_text(filename, file_type)
-
-    # Clean texts
+    resume_text = extract_text(filepath, file_type)
     resume_clean = clean_text(resume_text)
     jd_clean = clean_text(job_desc)
 
-    # NLP Scores (0–100)
     similarity_score = calculate_similarity(resume_clean, jd_clean)
-    keyword_score = keyword_match_score(resume_clean, jd_clean)
 
-    # ✅ FINAL ATS SCORE (EXPLICITLY IN TERMS OF 100)
     ats_score = round(
-        ((similarity_score / 100) * 0.7 +
-         (keyword_score / 100) * 0.3) * 100,
+        (similarity_score / 100) * 100,  # Only similarity used now
         2
     )
 
-    return jsonify({
+    response = {
         "similarity_score": similarity_score,
-        "keyword_score": keyword_score,
         "ats_score": ats_score
-    })
+    }
+
+    # -------- JOB SEEKER FEEDBACK --------
+    if role == "job_seeker":
+        # Feedback based on similarity
+        if similarity_score < 20:
+            feedback = "Please work on skills"
+        elif similarity_score < 50:
+            feedback = "Please work a little more on your skills"
+        else:
+            feedback = "Your skills match well with the job description"
+
+        response["feedback"] = feedback
+        response["missing_skills"] = get_missing_skills(resume_clean, jd_clean)
+
+    # -------- HIRING MANAGER DECISION --------
+    if role == "hiring_manager":
+        response["experience_years"] = extract_experience(resume_text)
+        if ats_score > 40:
+            response["decision"] = "There is a chance of hiring"
+        else:
+            response["decision"] = "No chance of hiring"
+
+    return jsonify(response)
 
 
 if __name__ == "__main__":
