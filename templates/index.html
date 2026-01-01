@@ -2,35 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ATS Resume Scanner</title>
-    <!-- Link to external CSS -->
-    <!-- <link rel="stylesheet" href="style.css">  -->
-     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script src="{{ url_for('static', filename='script.js') }}"></script>
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
 
-    <!-- Main heading -->
-    <h1>ATS Resume Scanner</h1>
+<h1>ATS Resume Scanner</h1>
 
-    <!-- Upload section -->
-    <div class="upload-section">
-        <!-- File input for resume -->
-        <input type="file" id="resumeFile" accept=".pdf,.doc,.docx"/>
-        <!-- Button triggers JS function; type="button" prevents page reload -->
+<div class="upload-section">
+    <input type="file" id="resumeFile" accept=".pdf,.docx"/>
 
-        <textarea id="jobDescription" placeholder="Paste Job Description here..." rows="6"></textarea>
+    <textarea id="jobDescription"
+        placeholder="Paste Job Description here..."
+        rows="6"></textarea>
 
-        
-        <button type="button" onclick="uploadResume()">Scan Resume</button>
-    </div>
+    <!-- TWO BUTTONS -->
+    <button type="button" onclick="uploadResume('job_seeker')">
+        Scan as Job Seeker
+    </button>
 
-    <!-- Container where extracted resume details will be displayed -->
-    <div id="result" class="result-container"></div>
+    <button type="button" onclick="uploadResume('hiring_manager')">
+        Scan as Hiring Manager
+    </button>
+</div>
 
-    <!-- Include JavaScript -->
-    <script src="script.js"></script>
+<div id="result" class="result-container"></div>
+
 </body>
 </html>
+

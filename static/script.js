@@ -1,4 +1,4 @@
-async function uploadResume() {
+async function uploadResume(role) {
     const fileInput = document.getElementById('resumeFile');
     const jobDesc = document.getElementById('jobDescription').value;
     const resultDiv = document.getElementById('result');
@@ -8,11 +8,12 @@ async function uploadResume() {
         return;
     }
 
-    resultDiv.innerHTML = `<p>Scanning...</p>`;
+    resultDiv.innerHTML = `<p>Scanning as ${role.replace('_', ' ')}...</p>`;
 
     const formData = new FormData();
     formData.append("resume", fileInput.files[0]);
     formData.append("job_description", jobDesc);
+    formData.append("role", role);
 
     try {
         const response = await fetch("http://127.0.0.1:5000/scan", {
@@ -21,36 +22,77 @@ async function uploadResume() {
         });
 
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
 
-        if (!response.ok) {
-            throw new Error(data.error);
-        }
+        displayResult(data, role);
 
-        displayResult(data);
-
-    } catch (error) {
-        console.error(error);
+    } catch {
         resultDiv.innerHTML = `<p style="color:red;">Error scanning resume</p>`;
     }
 }
 
-function displayResult(data) {
-    const resultDiv = document.getElementById('result');
+function displayResult(data, role) {
+    let decisionHTML = "";
+    let feedbackHTML = "";
+    let missingSkillsHTML = "";
+    let experienceHTML = "";
 
-    resultDiv.innerHTML = `
+    // HIRING MANAGER DECISION
+    if (role === "hiring_manager" && data.decision) {
+        decisionHTML = `
+            <div class="result-card">
+                <h3>Hiring Decision</h3>
+                <p><strong>${data.decision}</strong></p>
+            </div>
+        `;
+
+        if (data.experience_years !== undefined) {
+            experienceHTML = `
+                <div class="result-card">
+                    <h3>Experience</h3>
+                    <p>${data.experience_years} years</p>
+                </div>
+            `;
+        }
+    }
+
+    // JOB SEEKER FEEDBACK
+    if (role === "job_seeker" && data.feedback) {
+        feedbackHTML = `
+            <div class="result-card">
+                <h3>Feedback</h3>
+                <p>${data.feedback}</p>
+            </div>
+        `;
+    }
+
+    if (role === "job_seeker" && data.missing_skills?.length > 0) {
+        missingSkillsHTML = `
+            <div class="result-card">
+                <h3>Missing Skills</h3>
+                <ul>
+                    ${data.missing_skills.map(skill => `<li>${skill}</li>`).join("")}
+                </ul>
+            </div>
+        `;
+    }
+
+    document.getElementById('result').innerHTML = `
         <div class="result-card">
-            <h3>ATS Match Score</h3>
+            <h3>${role === "job_seeker"
+                ? "Job Seeker ATS Analysis"
+                : "Hiring Manager Resume Evaluation"}</h3>
+        </div>
+
+        <div class="result-card">
+            <h3>ATS Score</h3>
             <p><strong>${data.ats_score}%</strong></p>
         </div>
 
-        <div class="result-card">
-            <h3>NLP Similarity Score</h3>
-            <p>${data.similarity_score}%</p>
-        </div>
 
-        <div class="result-card">
-            <h3>Keyword Match</h3>
-            <p>${data.keyword_score}%</p>
-        </div>
+        ${experienceHTML}
+        ${decisionHTML}
+        ${feedbackHTML}
+        ${missingSkillsHTML}
     `;
 }
