@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ATS Resume Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+<body>
+
+<h1 style="font-size: 50px;">ATS Resume Scanner</h1>
+
+<div class="upload-section">
+    <input type="file" id="resumeFile" accept=".pdf,.docx"/>
+
+    <textarea id="jobDescription"
+        placeholder="Paste Job Description here..."
+        rows="6"></textarea>
+
+    <!-- TWO BUTTONS -->
+     <div class="two-buttons">
+
+        <button type="button" onclick="uploadResume('job_seeker')">
+        Scan as Job Seeker
+        </button>
+
+        <button type="button" onclick="uploadResume('hiring_manager')">
+        Scan as Hiring Manager
+        </button>
+
+     </div>
+</div>
+
+<div id="result" class="result-container"></div>
+
+</body>
+</html>
+
