@@ -11,9 +11,14 @@ body {
 }
 
 h1 {
-    color: #189f1c; /* Green accent for branding */
+    color: #4f0757; /* Green accent for branding */
     margin-bottom: 30px;
-    font-size: 2.2rem;
+    font-size: 2rem;
+}
+
+
+.result-card {
+        background-color: #f9f9f9;
 }
 
 /* =======================
@@ -21,31 +26,56 @@ h1 {
 ======================= */
 .upload-section {
     margin-bottom: 30px;
+    border: 20px solid #0d0d70;
+    height: 300px;
+    width: 1050px;
+    padding-left: 60px;
+    
+}
+.two-buttons{
+    margin-top: 20px;
+    display: flex;
+    margin-top: -20px;
+    /* gap: 20px; */
+    /* border: 10px solid #0d0d70; */
+    margin-left: 400px;
 }
 
 input[type="file"] {
-    padding: 8px;
-    margin: 10px 0;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    padding: 20px;
+    margin-left: -30px;
+    border-radius: 10px;
+    transform: translateY(-50px);
     font-size: 1rem;
+    width: 300px;
+    padding-right: 10px;
+    background-color: #0bb5b5;
+}
+
+#jobDescription{
+    font-size: 1.2rem;
+    margin-top: 20px;
+    color: #f0e9e9;
+    transform: translateY(40px);
+    background-color: #030a69;
+    width: 700px;
 }
 
 button {
-    padding: 10px 25px;
-    margin-left: 10px;
+    padding: 10px 30px;
+    margin-left: 20px;
     cursor: pointer;
-    border: none;
     border-radius: 5px;
-    background-color: #189f1c;
+    background-color: #0bb5b5;
     color: #fff;
     font-weight: bold;
     font-size: 1rem;
+    margin-top: 40px;
     transition: background-color 0.3s, transform 0.2s;
 }
 
 button:hover {
-    background-color: #148314;
+    background-color: #749c74;
     transform: scale(1.05); /* subtle hover effect */
 }
 
