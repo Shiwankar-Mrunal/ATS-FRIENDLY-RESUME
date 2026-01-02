@@ -211,7 +211,7 @@ UNIVERSAL_SKILLS = [
     
 
     # SAP Modules
-    # "sap mm", "procurement", "purchase order", "inventory management", 
+    "sap mm", "procurement", "purchase order", "inventory management", 
 
     # Networking / Security
     # "linux", "unix", "windows server", "firewall", "vpn", 
