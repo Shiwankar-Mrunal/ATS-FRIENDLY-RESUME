@@ -151,11 +151,11 @@ def scan_resume():
         })
 
         if len(matched_skills) >= 6:
-            response["decision"] = "Strong candidate – shortlist"
+            response["decision"] = "Strong candidate Please shortlist"
         elif len(matched_skills) >= 3:
-            response["decision"] = "Average candidate – review"
+            response["decision"] = "Average candidate can interview and then decide"
         else:
-            response["decision"] = "Weak candidate – reject"
+            response["decision"] = "Weak candidate reject"
 
     return jsonify(response)
 
