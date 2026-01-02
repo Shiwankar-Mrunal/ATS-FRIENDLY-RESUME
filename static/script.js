@@ -40,17 +40,17 @@ function displayResult(data, role) {
     // HIRING MANAGER DECISION
     if (role === "hiring_manager" && data.decision) {
         decisionHTML = `
-            <div class="result-card">
-                <h3>Hiring Decision</h3>
-                <p><strong>${data.decision}</strong></p>
+            <div class="result-card" style="background-color: rgba(57, 51, 166, 1); color: rgba(237, 236, 246, 1);">
+                <h3 style="color: rgba(237, 236, 246, 1);" >Hiring Decision</h3>
+                <p style="color: rgba(237, 236, 246, 1);"><strong>${data.decision}</strong></p>
             </div>
         `;
 
         if (data.experience_years !== undefined) {
             experienceHTML = `
-                <div class="result-card">
-                    <h3>Experience</h3>
-                    <p>${data.experience_years} years</p>
+                <div class="result-card" style="background-color: rgba(57, 51, 166, 1); color: rgba(237, 236, 246, 1);">
+                    <h3 style="color: rgba(237, 236, 246, 1);">Experience</h3>
+                    <p style="color: rgba(237, 236, 246, 1);">${data.experience_years} years</p>
                 </div>
             `;
         }
@@ -59,18 +59,18 @@ function displayResult(data, role) {
     // JOB SEEKER FEEDBACK
     if (role === "job_seeker" && data.feedback) {
         feedbackHTML = `
-            <div class="result-card">
-                <h3>Feedback</h3>
-                <p>${data.feedback}</p>
+            <div class="result-card" style="background-color: rgba(57, 51, 166, 1); color: rgba(237, 236, 246, 1);">
+                <h3 style="color: rgba(237, 236, 246, 1);">Feedback</h3>
+                <p style="color: rgba(237, 236, 246, 1);">${data.feedback}</p>
             </div>
         `;
     }
 
     if (role === "job_seeker" && data.missing_skills?.length > 0) {
         missingSkillsHTML = `
-            <div class="result-card">
-                <h3>Missing Skills</h3>
-                <ul>
+            <div class="result-card" style="background-color: rgba(57, 51, 166, 1);">
+                <h3 style="color: rgba(237, 236, 246, 1);">Missing Skills</h3>
+                <ul style="color: rgba(237, 236, 246, 1);">
                     ${data.missing_skills.map(skill => `<li>${skill}</li>`).join("")}
                 </ul>
             </div>
@@ -78,15 +78,15 @@ function displayResult(data, role) {
     }
 
     document.getElementById('result').innerHTML = `
-        <div class="result-card">
-            <h3>${role === "job_seeker"
+        <div class="result-card" style="background-color: rgba(57, 51, 166, 1); color: rgba(237, 236, 246, 1);">
+            <h1 style="color: rgba(237, 236, 246, 1);">${role === "job_seeker"
                 ? "Job Seeker ATS Analysis"
-                : "Hiring Manager Resume Evaluation"}</h3>
+                : "Hiring Manager Resume Evaluation"}</h1>
         </div>
 
-        <div class="result-card">
-            <h3>ATS Score</h3>
-            <p><strong>${data.ats_score}%</strong></p>
+        <div class="result-card" style="background-color: rgba(57, 51, 166, 1); color: rgba(237, 236, 246, 1);">
+            <h3 style="color: rgba(237, 236, 246, 1);">ATS Score</h3>
+            <p style="color: rgba(237, 236, 246, 1);"><strong>${data.ats_score}%</strong></p>
         </div>
 
 
