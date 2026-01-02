@@ -32,7 +32,7 @@
 
 - Matching resumes with job descriptions and generating suitability scores can improve hiring efficiency and consistency.
 
-## Steps to achieve the trageted goal
+## Steps to achieve the targeted goal
 
 
 - Create Frotend using html css 
