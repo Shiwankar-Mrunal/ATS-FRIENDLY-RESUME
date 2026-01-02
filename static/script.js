@@ -16,7 +16,11 @@ async function uploadResume(role) {
     formData.append("role", role);
 
     try {
-        const response = await fetch("http://127.0.0.1:5000/scan", {
+        // Detect if running on localhost or production
+    const API_BASE_URL = window.location.hostname === "127.0.0.1" 
+    ? "http://127.0.0.1:5000" 
+    : "https://ats-friendly-resume.onrender.com";
+        const response = await fetch("${API_BASE_URL}/scan", {
             method: "POST",
             body: formData
         });
@@ -111,4 +115,5 @@ function displayResult(data, role) {
         ${missingSkillsHTML}
     `;
 }
+
 
