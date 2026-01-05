@@ -1,10 +1,10 @@
 
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import PyPDF2
-import docx
-import re
-import os
+import PyPDF2 # Library to read PDF files in Python.
+import docx # Library to read Word documents in Python.
+import re # Regular expressions for pattern matching
+import os # create folders and save files
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity

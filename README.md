@@ -48,6 +48,11 @@
         - Ats Score
         - Experience
         - Decision Of Highring
+        - Strength
+        - Weaknesses
+
+
+
 
 ## Future Scope 
 

@@ -26,12 +26,23 @@ h1 {
 ======================= */
 .upload-section {
     margin-bottom: 30px;
-    border: 20px solid #0d0d70;
+    border: 20px solid #0d1d7c;
     height: 300px;
     width: 1050px;
     padding-left: 60px;
     
 }
+
+/* .upload-section { */
+    /* margin: 0 auto 30px auto; top:0, left/right:auto (center), bottom:30px */
+    /* border: 20px solid #70310d; */
+    /* height: 400px; */
+    /* width: 1050px;           can keep fixed, or use max-width for responsiveness */
+    /* padding: 20px;           uniform padding instead of large left-only padding */
+    /* box-sizing: border-box;  include border and padding in width */
+/* } */
+
+
 .two-buttons{
     margin-top: 20px;
     display: flex;
