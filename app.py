@@ -1,10 +1,9 @@
-
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import PyPDF2 # Library to read PDF files in Python.
-import docx # Library to read Word documents in Python.
-import re # Regular expressions for pattern matching
-import os # create folders and save files
+import PyPDF2
+import docx
+import re
+import os
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -14,45 +13,6 @@ CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# ---------------- UNIVERSAL SKILLS (150) ----------------
-UNIVERSAL_SKILLS = [
-    # Software Testing
-    "manual testing", "automation testing", "selenium", "cucumber", "test cases",
-    
-    # Programming Languages
-    "python", "java", "c", "c++", "c#", "javascript", "typescript", "ruby", "php", "go",
-    
-
-    # Web Development
-    "html", "css", "bootstrap", "react", "angular", "vue", "node.js", "express", "django", "flask",
-    
-
-    # Databases
-    # "sql", "mysql", "postgresql", "oracle", "mongodb", "redis", 
-    
-
-    # DevOps / Cloud
-    # "docker", "kubernetes", "jenkins", "ci cd", "ansible", "terraform", "aws", "azure", "gcp", "ec2",
-    
-
-    # SAP Modules
-    "sap mm", "procurement", "purchase order", "inventory management", 
-
-    # Networking / Security
-    # "linux", "unix", "windows server", "firewall", "vpn", 
-
-    # Analytics / Data Science
-    # "excel", "power bi", "tableau", "qlikview", "data visualization",
-    
-
-    # Agile / Project Management
-    # "agile", "scrum", "kanban", "sprint", "product backlog",
-
-    # General IT / Soft Skills
-    # "documentation", "presentation", "collaboration", "customer support", "troubleshooting",
-    
-]
 
 # ---------------- HELPERS ----------------
 
@@ -70,37 +30,67 @@ def extract_text(file_path, file_type):
             text += para.text + "\n"
     return text
 
+
 def clean_text(text):
     text = text.lower()
-    text = re.sub(r'[^a-z\s]', '', text)
+    text = re.sub(r'[^a-z\s]', ' ', text)
     return text
 
-def calculate_similarity(resume_text, job_desc):
-    vectorizer = TfidfVectorizer(stop_words='english')
-    vectors = vectorizer.fit_transform([resume_text, job_desc])
-    return round(cosine_similarity(vectors[0:1], vectors[1:2])[0][0] * 100, 2)
 
 def extract_experience(resume_text):
     matches = re.findall(r'(\d+)\s*\+?\s*years?', resume_text.lower())
     return max(map(int, matches)) if matches else 0
 
-def analyze_skills(resume_text):
-    matched = []
-    missing = []
 
-    for skill in UNIVERSAL_SKILLS:
-        if skill in resume_text.lower():
-            matched.append(skill)
+def extract_keywords(text, top_n=20):
+    """
+    Extract important keywords from job description using TF-IDF
+    """
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=top_n)
+    vectorizer.fit([text])
+    return vectorizer.get_feature_names_out()
+
+
+def calculate_ats_score(resume_text, job_desc):
+    try:
+        # -------- CONTENT SIMILARITY (70%) --------
+        vectorizer = TfidfVectorizer(stop_words='english')
+
+        if not resume_text.strip() or not job_desc.strip():
+            return 0, [], []
+
+        vectors = vectorizer.fit_transform([resume_text, job_desc])
+        similarity = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
+        content_score = similarity * 70
+
+        # -------- KEYWORD MATCH (30%) --------
+        keyword_vectorizer = TfidfVectorizer(stop_words='english', max_features=20)
+        keyword_vectorizer.fit([job_desc])
+        jd_keywords = keyword_vectorizer.get_feature_names_out()
+
+        matched_keywords = [word for word in jd_keywords if word in resume_text]
+
+        if len(jd_keywords) > 0:
+            keyword_score = (len(matched_keywords) / len(jd_keywords)) * 30
         else:
-            missing.append(skill)
+            keyword_score = 0
 
-    return matched, missing
+        total_score = round(content_score + keyword_score, 2)
+
+        return total_score, matched_keywords, list(jd_keywords)
+
+    except Exception as e:
+        print("ATS Calculation Error:", str(e))
+        return 0, [], []
+
+
 
 # ---------------- ROUTES ----------------
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/scan", methods=["POST"])
 def scan_resume():
@@ -109,20 +99,23 @@ def scan_resume():
     role = request.form.get("role")
 
     if not resume or not job_desc:
-        return jsonify({"error": "Missing data"}), 400
+        return jsonify({"error": "Missing resume or job description"}), 400
 
+    # Save file
     filepath = os.path.join(UPLOAD_FOLDER, resume.filename)
     resume.save(filepath)
 
+    # Extract text
     file_type = resume.filename.split('.')[-1].lower()
     resume_text = extract_text(filepath, file_type)
 
     resume_clean = clean_text(resume_text)
     jd_clean = clean_text(job_desc)
 
-    ats_score = calculate_similarity(resume_clean, jd_clean)
+    # Calculate ATS score
+    ats_score, matched_keywords, jd_keywords = calculate_ats_score(resume_clean, jd_clean)
 
-    matched_skills, missing_skills = analyze_skills(resume_text)
+    missing_keywords = list(set(jd_keywords) - set(matched_keywords))
 
     response = {
         "ats_score": ats_score
@@ -130,34 +123,42 @@ def scan_resume():
 
     # -------- JOB SEEKER --------
     if role == "job_seeker":
-        if len(matched_skills) <= 3:
-            feedback = "Your resume lacks many required skills. Please work on improving your skills."
-        elif len(matched_skills) <= 6:
-            feedback = "Partial skill match. Improve remaining skills."
+
+        if ats_score < 30:
+            feedback = "Low ATS score. Improve resume with more relevant keywords from job description."
+        elif ats_score < 50:
+            feedback = "Moderate ATS score. Add missing skills and improve alignment."
         else:
-            feedback = "Good skill match. Your resume is strong."
+            feedback = "Excellent ATS score. Resume matches well with job description."
 
         response.update({
             "feedback": feedback,
-            "missing_skills": missing_skills
+            "matched_keywords": matched_keywords,
+            "missing_keywords": missing_keywords
         })
 
     # -------- HIRING MANAGER --------
     if role == "hiring_manager":
+
+        experience = extract_experience(resume_text)
+
         response.update({
-            "experience_years": extract_experience(resume_text),
-            "strengths": matched_skills,
-            "weaknesses": missing_skills
+            "experience_years": experience,
+            "strengths": matched_keywords,
+            "weaknesses": missing_keywords
         })
 
-        if len(matched_skills) >= 6:
-            response["decision"] = "Strong candidate Please shortlist"
-        elif len(matched_skills) >= 3:
-            response["decision"] = "Average candidate can interview and then decide"
+        if ats_score >= 50:
+            decision = "Strong candidate - Shortlist"
+        elif ats_score >= 30:
+            decision = "Average candidate - Take Interview and then decide"
         else:
-            response["decision"] = "Weak candidate reject"
+            decision = "Weak candidate - Reject"
+
+        response["decision"] = decision
 
     return jsonify(response)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
