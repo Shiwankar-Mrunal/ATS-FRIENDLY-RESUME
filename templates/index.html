@@ -7,15 +7,29 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-
+<!-- <img src="https://www.istockphoto.com/en/photo/abstract-concepts-of-cybersecurity-technology-and-digital-data-protection-protect-gm1419766496-466008842" alt=""> -->
 <h1 style="font-size: 50px;">ATS Resume Scanner</h1>
 
-<div class="upload-section">
-    <input type="file" id="resumeFile" accept=".pdf,.docx"/>
+<div class="role-buttons">
+    <button type="button" onclick="selectRole('Developer')">Python Developer</button>
+    <button type="button" onclick="selectRole('Tester')">Automation Tester</button>
+    <button type="button" onclick="selectRole('SAP')">SAP</button>
+    <button type="button" onclick="selectRole('SRE')">SRE</button>
+    <button type="button" onclick="selectRole('DevOps')">DevOps</button>
+    <button type="button" onclick="selectRole('SocAnalyst')">SocAnalyst</button>
+</div>
 
-    <textarea id="jobDescription"
-        placeholder="Paste Job Description here..."
-        rows="6"></textarea>
+<div class="upload-section">
+    <div class="choose-file">
+        
+        <input style=" border-radius: 10px; width: 320px; font-size: 1.2rem; margin-top: 100px; background-color:bisque; color: black;"  type="file"
+        id="resumeFile" accept=".pdf,.docx"/>
+    
+    </div>
+    
+
+    <!-- <textarea id="jobDescription"
+        rows="6">Find Out if Your Resume is ATS-Optimized with Enhancv’s Resume Scanner</textarea> -->
 
     <!-- TWO BUTTONS -->
      <div class="two-buttons">
