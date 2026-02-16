@@ -92,6 +92,7 @@ input[type="file"] {
 } */
 
 button {
+    /* border: 5px solid #154981; */
     padding: 10px 30px;
     margin-left: 20px;
     cursor: pointer;
@@ -113,15 +114,16 @@ button:hover {
    RESULTS SECTION
 ======================= */
 .result-container {
+    /* border: 2px solid #e2530c; */
     margin-top: 30px;
-    text-align: center;
+    text-align: left;
     display: inline-block;
     max-width: 600px;
     width: 100%;
 }
 
 .result-card {
-    background-color: #fff;
+    background-color: whitesmoke;
     padding: 20px;
     margin-bottom: 15px;
     border-radius: 10px;
@@ -129,14 +131,14 @@ button:hover {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.result-card:hover {
+/* .result-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
+} */
 
 .result-card h3 {
     margin-bottom: 8px;
-    color: #189f1c;
+    color: #011301;
     font-size: 1.2rem;
 }
 
