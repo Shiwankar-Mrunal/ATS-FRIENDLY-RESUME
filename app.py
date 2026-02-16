@@ -38,15 +38,26 @@ def extract_text(file_path, file_type):
 def clean_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
     print("🧹 Cleaned Text Preview:", text[:200])
-    return text
+    return text.strip()
 
 
 def extract_experience(resume_text):
-    matches = re.findall(r'(\d+)\s*\+?\s*years?', resume_text.lower())
-    print(" Resume Text Preview:", resume_text[:200])  # first 200 characters
-    return max(map(int, matches)) if matches else 0
-
+    """
+    Extract years of experience from resume text.
+    Handles patterns like:
+      - 3 years
+      - 5+ yrs
+      - 2 years of experience
+      - 4 yrs.
+    """
+    resume_text = resume_text.lower()
+    pattern = r'(\d+)\s*\+?\s*(?:years?|yrs?)(?:\s*of\s*experience)?'
+    matches = re.findall(pattern, resume_text)
+    if matches:
+        return max(map(int, matches))
+    return 0
 
 
 def load_role_skills(role):
@@ -65,10 +76,11 @@ def load_role_skills(role):
 
     return []
 
+
 def normalize_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
-    text = re.sub(r'\s+', ' ', text)  # collapse multiple spaces
+    text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
 
@@ -76,19 +88,19 @@ def calculate_ats_score(resume_text, role_skills):
     """
     Compare resume ONLY with role skills.
     Score is 100% based on skill match.
+    Returns: total_score, matched_skills, missing_skills, perfect_match_message
     """
     resume_text = normalize_text(resume_text)
 
     if not role_skills:
         print("⚠️ No skills loaded for this role!")
-        return 0, [], []
+        return 0, [], [], None
 
     matched_skills = []
     missing_skills = []
 
     for skill in role_skills:
         skill_norm = normalize_text(skill)
-        # Match whole words only
         if re.search(r'\b' + re.escape(skill_norm) + r'\b', resume_text):
             matched_skills.append(skill)
         else:
@@ -101,8 +113,13 @@ def calculate_ats_score(resume_text, role_skills):
     print(f"❌ Missing Skills: {missing_skills}")
     print(f"🎯 ATS Score: {total_score}%")
 
-    return total_score, matched_skills, missing_skills
+    # Special message if all skills are matched
+    perfect_match_message = None
+    if not missing_skills and role_skills:
+        perfect_match_message = "🎉 Congratulations! All required skills matched! 100% skills matched!"
+        print(perfect_match_message)
 
+    return total_score, matched_skills, missing_skills, perfect_match_message
 
 
 # ---------------- ROUTES ----------------
@@ -128,19 +145,24 @@ def scan_resume():
     # Extract text
     file_type = resume.filename.split('.')[-1].lower()
     resume_text = extract_text(filepath, file_type)
+
+    # Extract experience from raw text
+    experience_years = extract_experience(resume_text)
+    print(f"🕒 Extracted Experience: {experience_years} years")
+
+    # Clean text for ATS scoring
     resume_clean = clean_text(resume_text)
 
     # Load skills for selected role
     role_skills = load_role_skills(selected_role)
 
-# Terminal output
     if role_skills:
         print(f"📌 Loaded skills for role '{selected_role}': {role_skills}")
     else:
         print(f"⚠️ No skills loaded for role '{selected_role}'!")
 
     # Calculate ATS based ONLY on role skills
-    ats_score, matched_skills, missing_skills = calculate_ats_score(
+    ats_score, matched_skills, missing_skills, perfect_match_message = calculate_ats_score(
         resume_clean,
         role_skills
     )
@@ -148,10 +170,30 @@ def scan_resume():
     response = {
         "ats_score": ats_score,
         "matched_skills": matched_skills,
-        "missing_skills": missing_skills
+        "missing_skills": missing_skills,
+        "experience_years": experience_years
     }
 
-    
+    # Include perfect match message if all skills are matched
+    if perfect_match_message:
+        response["perfect_match_message"] = perfect_match_message
+
+    # Add hiring decision if user is hiring manager
+    if user_type == "hiring_manager":
+        matched_count = len(matched_skills)
+        total_skills = len(role_skills)
+
+        if matched_count == total_skills and total_skills > 0:
+            decision = "🎉 100% skills matched!"
+        elif matched_count >= 8:
+            decision = "Strong candidate – Please shortlist"
+        elif matched_count >= 5:
+            decision = "Average candidate – Can interview and then decide"
+        else:
+            decision = "Do not hire – Not enough skills matched"
+
+        response["hiring_decision"] = decision
+
     return jsonify(response)
 
 
