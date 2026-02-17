@@ -98,6 +98,7 @@ def calculate_ats_score(resume_text, role_skills):
 
 def process_resume(filepath, selected_role, user_type):
     file_type = filepath.split('.')[-1].lower()
+    filename = os.path.basename(filepath)
 
     resume_text = extract_text(filepath, file_type)
     experience_years = extract_experience(resume_text)
@@ -119,6 +120,7 @@ def process_resume(filepath, selected_role, user_type):
     if perfect_match_message:
         response["perfect_match_message"] = perfect_match_message
 
+    # ✅ Only for Hiring Manager
     if user_type == "hiring_manager":
         matched_count = len(matched_skills)
         total_skills = len(role_skills)
@@ -134,7 +136,11 @@ def process_resume(filepath, selected_role, user_type):
 
         response["hiring_decision"] = decision
 
+        # ✅ Resume URL instead of text
+        response["resume_url"] = f"http://localhost:5000/uploads/{filename}"
+
     return response
+
 
 
 # ---------------- ROUTES ----------------
@@ -142,6 +148,11 @@ def process_resume(filepath, selected_role, user_type):
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/uploads/<filename>")
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
 
 
 @app.route("/scan", methods=["POST"])

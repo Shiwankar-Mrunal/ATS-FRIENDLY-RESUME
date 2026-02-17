@@ -218,52 +218,75 @@ function displayResult(data, userType) {
     }
 
     /* ==============================
-       HIRING MANAGER VIEW
-    ============================== */
-    if (userType === "hiring_manager") {
+   HIRING MANAGER VIEW
+============================== */
+if (userType === "hiring_manager") {
 
-        const matchedSkills = data.matched_skills || [];
-        const mismatchedSkills = data.missing_skills || [];
+    const matchedSkills = data.matched_skills || [];
+    const mismatchedSkills = data.missing_skills || [];
 
+    html += `
+        <div class="result-card">
+            <h3>Hiring Decision</h3>
+            <p style="color: #ee3514; font-weight: bold;">
+                ${data.hiring_decision || ""}
+            </p>
+        </div>
+
+        <div class="result-card">
+            <h3>Matched Skills</h3>
+            <ul style="font-weight: bold;">
+                ${matchedSkills.map(skill => 
+                    `<li style="color: #00b300;">${skill}</li>`
+                ).join("")}
+            </ul>
+        </div>
+    `;
+
+    if (mismatchedSkills.length === 0 && matchedSkills.length > 0) {
         html += `
             <div class="result-card">
-                <h3>Hiring Decision</h3>
-                <p style="color: #ee3514; font-weight: bold;">${data.hiring_decision || ""}</strong></p>
-            </div>
-
-            <div class="result-card">
-                <h3>Matched Skills</h3>
-                <ul style="font-weight: bold;">${matchedSkills.map(skill => `<li style="color: #00b300;">${skill}</li>`).join("")}</ul>
+                <h3>Missing Skills</h3>
+                <p style="color: #ee3514; font-weight: bold;">
+                    Congratulations! All required skills matched!
+                </p>
             </div>
         `;
-
-        if (mismatchedSkills.length === 0 && matchedSkills.length > 0) {
-            html += `
-                <div class="result-card">
-                    <h3>Missing Skills</h3>
-                    <p style="color: #ee3514; font-weight: bold;">
-                        Congratulations! All required skills matched!
-                    </p>
-                </div>
-            `;
-        } else {
-            html += `
-                <div class="result-card">
-                    <h3>Missing Skills</h3>
-                    <ul style="font-weight: bold; color: #ee3514">
-                        ${mismatchedSkills.map(skill => `<li style="color: red;">${skill}</li>`).join("")}
-                    </ul>
-                </div>
-            `;
-        }
-
+    } else {
         html += `
             <div class="result-card">
-                <h3>Experience</h3>
-                <p style="color: #30d430; font-weight: bold;">${data.experience_years || 0} years</p>
+                <h3>Missing Skills</h3>
+                <ul style="font-weight: bold;">
+                    ${mismatchedSkills.map(skill => 
+                        `<li style="color: red;">${skill}</li>`
+                    ).join("")}
+                </ul>
             </div>
         `;
     }
+
+    html += `
+        <div class="result-card">
+            <h3>Experience</h3>
+            <p style="color: #30d430; font-weight: bold;">
+                ${data.experience_years || 0} years
+            </p>
+        </div>
+    `;
+
+    // ✅ NEW: Resume URL Section
+    if (data.resume_url) {
+        html += `
+            <div class="result-card">
+                <h3>View Resume</h3>
+                <a href="${data.resume_url}" target="_blank"
+                   style="color: #0012b3; font-weight: bold; text-decoration: underline;">
+                   Click here to open resume
+                </a>
+            </div>
+        `;
+    }
+}
 
     resultDiv.innerHTML = html;
 }
