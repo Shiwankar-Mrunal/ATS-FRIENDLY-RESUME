@@ -120,7 +120,7 @@ def process_resume(filepath, selected_role, user_type):
     if perfect_match_message:
         response["perfect_match_message"] = perfect_match_message
 
-    # ✅ Only for Hiring Manager
+    # Only for Hiring Manager
     if user_type == "hiring_manager":
         matched_count = len(matched_skills)
         total_skills = len(role_skills)
@@ -136,7 +136,7 @@ def process_resume(filepath, selected_role, user_type):
 
         response["hiring_decision"] = decision
 
-        # ✅ Resume URL instead of text
+        # Resume URL instead of text
         response["resume_url"] = f"http://localhost:5000/uploads/{filename}"
 
     return response
@@ -171,7 +171,7 @@ def scan_resume():
     return jsonify(response)
 
 
-# ✅ NEW: Get all uploaded resumes
+#  NEW: Get all uploaded resumes
 @app.route("/get_uploaded_resumes")
 def get_uploaded_resumes():
     files = [f for f in os.listdir(UPLOAD_FOLDER)
@@ -179,7 +179,7 @@ def get_uploaded_resumes():
     return jsonify(files)
 
 
-# ✅ NEW: Scan existing resume from uploads folder
+#  NEW: Scan existing resume from uploads folder
 @app.route("/scan_existing_resume", methods=["POST"])
 def scan_existing_resume():
     data = request.json
