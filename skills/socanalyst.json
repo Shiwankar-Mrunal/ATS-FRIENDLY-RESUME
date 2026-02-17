@@ -1,34 +1,6 @@
 {
   "skills": [
-    "Cybersecurity",
-    "SOC Monitoring",
-    "SIEM",
-    "Splunk",
-    "ELK Stack",
-    "Incident Response",
-    "Threat Analysis",
-    "Vulnerability Assessment",
-    "Firewalls",
-    "IDS/IPS",
-    "Network Security",
-    "Endpoint Security",
-    "Phishing Analysis",
-    "Malware Analysis",
-    "Python",
-    "PowerShell",
-    "Log Analysis",
-    "Risk Assessment",
-    "Security Policies",
-    "Compliance",
-    "Analytical Skills",
-    "risks swiftly",
-    "Intrusion Detection Systems (IDS)",
-    "Security Information and EventManagement (SIEM)",
-    "SOC Analyst",
-    "cybersecurity",
-    "identify vulnerabilities",
-    "mitigate cyber threats",
-    "Monitored security alerts",
-    "hunting and incident investigation"
+    "SOC Analyst","cybersecurity","identify vulnerabilities","cyber threats",
+    "security policies","alerts and logs","Intrusion Detection Systems","Security Information and EventManagement (SIEM)","security audits","Risk management"
   ]
 }

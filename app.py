@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import PyPDF2
 import docx
@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
-SKILLS_FOLDER = 'skills'   # Folder containing role JSON files
+SKILLS_FOLDER = 'skills'
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -39,19 +39,10 @@ def clean_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
     text = re.sub(r'\s+', ' ', text)
-    print("🧹 Cleaned Text Preview:", text[:200])
     return text.strip()
 
 
 def extract_experience(resume_text):
-    """
-    Extract years of experience from resume text.
-    Handles patterns like:
-      - 3 years
-      - 5+ yrs
-      - 2 years of experience
-      - 4 yrs.
-    """
     resume_text = resume_text.lower()
     pattern = r'(\d+)\s*\+?\s*(?:years?|yrs?)(?:\s*of\s*experience)?'
     matches = re.findall(pattern, resume_text)
@@ -61,11 +52,6 @@ def extract_experience(resume_text):
 
 
 def load_role_skills(role):
-    """
-    Load skills from JSON file based on selected role.
-    Example:
-    Python Developer -> skills/python_developer.json
-    """
     filename = f"{role.lower().replace(' ', '_')}.json"
     file_path = os.path.join(SKILLS_FOLDER, filename)
 
@@ -85,15 +71,9 @@ def normalize_text(text):
 
 
 def calculate_ats_score(resume_text, role_skills):
-    """
-    Compare resume ONLY with role skills.
-    Score is 100% based on skill match.
-    Returns: total_score, matched_skills, missing_skills, perfect_match_message
-    """
     resume_text = normalize_text(resume_text)
 
     if not role_skills:
-        print("⚠️ No skills loaded for this role!")
         return 0, [], [], None
 
     matched_skills = []
@@ -109,59 +89,21 @@ def calculate_ats_score(resume_text, role_skills):
     score = (len(matched_skills) / len(role_skills)) * 100
     total_score = round(score, 2)
 
-    print(f"✅ Matched Skills: {matched_skills}")
-    print(f"❌ Missing Skills: {missing_skills}")
-    print(f"🎯 ATS Score: {total_score}%")
-
-    # Special message if all skills are matched
     perfect_match_message = None
     if not missing_skills and role_skills:
         perfect_match_message = "🎉 Congratulations! All required skills matched! 100% skills matched!"
-        print(perfect_match_message)
 
     return total_score, matched_skills, missing_skills, perfect_match_message
 
 
-# ---------------- ROUTES ----------------
+def process_resume(filepath, selected_role, user_type):
+    file_type = filepath.split('.')[-1].lower()
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-
-@app.route("/scan", methods=["POST"])
-def scan_resume():
-    resume = request.files.get("resume")
-    user_type = request.form.get("user_type", "")          # job_seeker / hiring_manager
-    selected_role = request.form.get("selected_role", "")  # python_developer etc.
-
-    if not resume or not user_type or not selected_role:
-        return jsonify({"error": "Missing resume, user type or role"}), 400
-
-    # Save uploaded resume
-    filepath = os.path.join(UPLOAD_FOLDER, resume.filename)
-    resume.save(filepath)
-
-    # Extract text
-    file_type = resume.filename.split('.')[-1].lower()
     resume_text = extract_text(filepath, file_type)
-
-    # Extract experience from raw text
     experience_years = extract_experience(resume_text)
-    print(f"🕒 Extracted Experience: {experience_years} years")
-
-    # Clean text for ATS scoring
     resume_clean = clean_text(resume_text)
-
-    # Load skills for selected role
     role_skills = load_role_skills(selected_role)
 
-    if role_skills:
-        print(f"📌 Loaded skills for role '{selected_role}': {role_skills}")
-    else:
-        print(f"⚠️ No skills loaded for role '{selected_role}'!")
-
-    # Calculate ATS based ONLY on role skills
     ats_score, matched_skills, missing_skills, perfect_match_message = calculate_ats_score(
         resume_clean,
         role_skills
@@ -174,11 +116,9 @@ def scan_resume():
         "experience_years": experience_years
     }
 
-    # Include perfect match message if all skills are matched
     if perfect_match_message:
         response["perfect_match_message"] = perfect_match_message
 
-    # Add hiring decision if user is hiring manager
     if user_type == "hiring_manager":
         matched_count = len(matched_skills)
         total_skills = len(role_skills)
@@ -188,12 +128,62 @@ def scan_resume():
         elif matched_count >= 8:
             decision = "Strong candidate – Please shortlist"
         elif matched_count >= 5:
-            decision = "Average candidate – Can interview and then decide"
+            decision = "Average candidate – Can interview"
         else:
-            decision = "Do not hire – Not enough skills matched"
+            decision = "Do not hire"
 
         response["hiring_decision"] = decision
 
+    return response
+
+
+# ---------------- ROUTES ----------------
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/scan", methods=["POST"])
+def scan_resume():
+    resume = request.files.get("resume")
+    user_type = request.form.get("user_type", "")
+    selected_role = request.form.get("selected_role", "")
+
+    if not resume or not user_type or not selected_role:
+        return jsonify({"error": "Missing resume, user type or role"}), 400
+
+    filepath = os.path.join(UPLOAD_FOLDER, resume.filename)
+    resume.save(filepath)
+
+    response = process_resume(filepath, selected_role, user_type)
+    return jsonify(response)
+
+
+# ✅ NEW: Get all uploaded resumes
+@app.route("/get_uploaded_resumes")
+def get_uploaded_resumes():
+    files = [f for f in os.listdir(UPLOAD_FOLDER)
+             if f.endswith(('.pdf', '.docx'))]
+    return jsonify(files)
+
+
+# ✅ NEW: Scan existing resume from uploads folder
+@app.route("/scan_existing_resume", methods=["POST"])
+def scan_existing_resume():
+    data = request.json
+    filename = data.get("filename")
+    selected_role = data.get("selected_role")
+
+    if not filename or not selected_role:
+        return jsonify({"error": "Missing filename or role"}), 400
+
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+    if not os.path.exists(filepath):
+        return jsonify({"error": "File not found"}), 404
+
+    response = process_resume(filepath, selected_role, "hiring_manager")
     return jsonify(response)
 
 
