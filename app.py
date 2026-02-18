@@ -54,10 +54,19 @@ def extract_experience(resume_text):
 
 def load_role_skills(role):
     filename = f"{role.lower().replace(' ', '_')}.json"
-    file_path = os.path.join(SKILLS_FOLDER, filename)
+    # Remove any path separators to prevent directory traversal in the filename
+    filename = filename.replace("/", "").replace("\\", "")
+    # Build and normalize the full path inside the skills folder
+    file_path = os.path.normpath(os.path.join(SKILLS_FOLDER, filename))
 
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as f:
+    # Ensure the resolved path is still within the skills folder
+    skills_root = os.path.abspath(SKILLS_FOLDER)
+    file_path_abs = os.path.abspath(file_path)
+    if not file_path_abs.startswith(skills_root + os.path.sep):
+        return []
+
+    if os.path.exists(file_path_abs):
+        with open(file_path_abs, 'r') as f:
             data = json.load(f)
             return data.get("skills", [])
 
