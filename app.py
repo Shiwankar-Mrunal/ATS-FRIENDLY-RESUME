@@ -189,7 +189,14 @@ def scan_existing_resume():
     if not filename or not selected_role:
         return jsonify({"error": "Missing filename or role"}), 400
 
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    # Normalize and validate the path to prevent directory traversal
+    base_path = os.path.abspath(UPLOAD_FOLDER)
+    requested_path = os.path.abspath(os.path.normpath(os.path.join(base_path, filename)))
+
+    if not (requested_path == base_path or requested_path.startswith(base_path + os.sep)):
+        return jsonify({"error": "Invalid filename"}), 400
+
+    filepath = requested_path
 
     if not os.path.exists(filepath):
         return jsonify({"error": "File not found"}), 404
