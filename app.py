@@ -200,9 +200,18 @@ def scan_existing_resume():
     if not filename or not selected_role:
         return jsonify({"error": "Missing filename or role"}), 400
 
+    # Sanitize the filename to remove any path components or unsafe characters
+    safe_filename = secure_filename(filename)
+    if not safe_filename:
+        return jsonify({"error": "Invalid filename"}), 400
+
+    # Optionally restrict to known resume file types
+    if not safe_filename.lower().endswith((".pdf", ".docx")):
+        return jsonify({"error": "Unsupported file type"}), 400
+
     # Normalize and validate the path to prevent directory traversal
     base_path = os.path.abspath(UPLOAD_FOLDER)
-    requested_path = os.path.abspath(os.path.normpath(os.path.join(base_path, filename)))
+    requested_path = os.path.abspath(os.path.normpath(os.path.join(base_path, safe_filename)))
 
     if not (requested_path == base_path or requested_path.startswith(base_path + os.sep)):
         return jsonify({"error": "Invalid filename"}), 400
