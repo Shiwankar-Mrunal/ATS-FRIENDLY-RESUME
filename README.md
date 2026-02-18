@@ -86,12 +86,29 @@
     - Scan as Hiring Manager
 ![alt text](image.png)
 
-## Scenario After selecting any role  " ***DevOPs*** "
+## 1.3 Scenario After selecting any role  " ***DevOPs*** "
 - After selecting role please choose resume PDF
 ![alt text](image-1.png)
 - After this user have two options
     - If you are Job Seeker select   ``` Scan as JOB SEEKER ```
     - If You are Hiring Manager select ``` Scan as HIRING MANAGER```
+
+## 1.4 Skills 
+- Create seperate folder for skills
+- ex. for "Devops" role
+    - devops.json
+
+    ![alt text](image-4.png)
+
+## For Detailed code related information please go through below links
+### For Frontend 
+
+https://github.com/Shiwankar-Mrunal/ATS-FRIENDLY-RESUME/tree/main/Specification/FrontEnd
+
+### For Backend
+
+https://github.com/Shiwankar-Mrunal/ATS-FRIENDLY-RESUME/tree/main/Specification/BackEnd
+
 
 # 1. Select Scan as Job Seeker : 
 ### "***Display***" 
@@ -113,3 +130,25 @@
     - Click here to open resume
 
 ![alt text](image-3.png)
+
+
+# Testing ATS Scanner For RealTime
+
+| SR. NO |              SCENARIO                |       ROLE           | ATS SCORE     |  RESULT  |
+|--------|--------------------------------------|----------------------|---------------|----------|
+|   1    |  When user select role as developer  |  Python Developer    |     20%       |   Pass   |
+|        |                                      |                      |               |          |
+|   2    |   When user select role as Tester    |   Automation Tester  |     40%       |   Pass   |
+|        |                                      |                      |               |          |
+|   3    |   When user select role as SAP       |         SAP          |     100%      |   Pass   |
+|        |                                      |                      |               |          |
+|   4    |   When user select role as SRE       |         SRE          |     100%      |   Pass   |
+|        |                                      |                      |               |          |
+|   5    |  When user select role as Deveps     |       DevOps         |      61.54%   |   Pass   |
+|        |                                      |                      |               |          |
+|   6    |  When user select role as SocAnalyst |      SocAnalyst      |      80%      |   Pass   |
+
+
+# Future Scope 
+1) For multiple role add role.json file inside skills folder
+2) Attached Database.
