@@ -206,4 +206,5 @@ def scan_existing_resume():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    debug_mode = os.getenv("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
+    app.run(debug=debug_mode)
