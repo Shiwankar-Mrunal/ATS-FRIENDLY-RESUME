@@ -5,6 +5,7 @@ import docx
 import re
 import os
 import json
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)
@@ -164,7 +165,8 @@ def scan_resume():
     if not resume or not user_type or not selected_role:
         return jsonify({"error": "Missing resume, user type or role"}), 400
 
-    filepath = os.path.join(UPLOAD_FOLDER, resume.filename)
+    filename = secure_filename(resume.filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     resume.save(filepath)
 
     response = process_resume(filepath, selected_role, user_type)
