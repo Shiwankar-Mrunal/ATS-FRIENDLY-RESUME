@@ -6,18 +6,19 @@
 -   request, jsonify, render_template, send_from_directory – for handling HTTP requests, sending JSON responses, rendering HTML templates, and serving uploaded files.
 -   CORS – Cross-Origin Resource Sharing; allows frontend (maybe React or another web client) to call the Flask API from a different origin.
 - PyPDF2 – for reading text from PDF files.
-- docx – for reading Microsoft Word documents.
 - re – regular expressions for text cleaning and pattern matching.
 - os – file system operations.
 - json – reading JSON files containing skills for roles.
+- from werkzeug.utils import secure_filename - Prevents security risks when saving uploaded files. 
 
-```from flask import Flask, request, jsonify, render_template, send_from_directory
+```
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import PyPDF2
-import docx
 import re
 import os
 import json
+from werkzeug.utils import secure_filename
 ```
 # 2. App Configuration
 -   Initializes Flask app and enables CORS.
@@ -50,7 +51,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ### a) Extract text from resume :
 
--  Detects file type (pdf or docx) and extracts text from the file.
+-  Detects file type (pdf) and extracts text from the file.
 ```
 def extract_text(file_path, file_type):
     text = ""
@@ -62,15 +63,10 @@ def extract_text(file_path, file_type):
                 if page.extract_text():
                     text += page.extract_text() + "\n"
 
-    elif file_type == 'docx':
-        doc = docx.Document(file_path)
-        for para in doc.paragraphs:
-            text += para.text + "\n"
-
     return text
 ```
 
-### b) Clean text
+### b) Normalized text
 
 - Converts text to lowercase.
 - Removes all special characters.
@@ -78,7 +74,7 @@ def extract_text(file_path, file_type):
 - Returns clean, normalized text for analysis.
 
 ```
-def clean_text(text):
+def normalize_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
     text = re.sub(r'\s+', ' ', text)
@@ -93,12 +89,9 @@ def clean_text(text):
 
 ```
 def extract_experience(resume_text):
-    resume_text = resume_text.lower()
-    pattern = r'(\d+)\s*\+?\s*(?:years?|yrs?)(?:\s*of\s*experience)?'
-    matches = re.findall(pattern, resume_text)
-    if matches:
-        return max(map(int, matches))
-    return 0
+    pattern = r"(\d+)\s*\+?\s*(?:years?|yrs?)(?:\s*of\s*experience)?"
+    matches = re.findall(pattern, resume_text.lower())
+    return max(map(int, matches)) if matches else 0
 ```
 
 ### d) Load skills for a role
@@ -110,16 +103,13 @@ def extract_experience(resume_text):
 def load_role_skills(role):
     filename = f"{role.lower().replace(' ', '_')}.json"
     file_path = os.path.join(SKILLS_FOLDER, filename)
-
     if os.path.exists(file_path):
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-            return data.get("skills", [])
-
+        with open(file_path, "r") as f:
+            return json.load(f).get("skills", [])
     return []
 ```
 
-### e) Normalize text
+<!-- ### e) Normalize text
 
 - Similar to clean_text but used specifically for matching skills.
 - Ensures consistency when checking if a skill is mentioned in resume.
@@ -130,7 +120,10 @@ def normalize_text(text):
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
-```
+``` -->
+
+
+
 ### f) Calculate ATS score
 
 - Checks if each skill is present in the resume.
@@ -143,86 +136,55 @@ def normalize_text(text):
 
     - ```missing_skills``` – skills not found in resume
 
-    - ```perfect_match_message``` – if all skills are matched
 ```
 def calculate_ats_score(resume_text, role_skills):
     resume_text = normalize_text(resume_text)
-
-    if not role_skills:
-        return 0, [], [], None
-
     matched_skills = []
     missing_skills = []
 
     for skill in role_skills:
-        skill_norm = normalize_text(skill)
-        if re.search(r'\b' + re.escape(skill_norm) + r'\b', resume_text):
+        if re.search(r"\b" + re.escape(normalize_text(skill)) + r"\b", resume_text):
             matched_skills.append(skill)
         else:
             missing_skills.append(skill)
 
-    score = (len(matched_skills) / len(role_skills)) * 100
-    total_score = round(score, 2)
-
-    perfect_match_message = None
-    if not missing_skills and role_skills:
-        perfect_match_message = "🎉 Congratulations! All required skills matched! 100% skills matched!"
-
-    return total_score, matched_skills, missing_skills, perfect_match_message
+    score = round((len(matched_skills) / len(role_skills)) * 100, 2) if role_skills else 0
+    return score, matched_skills, missing_skills
 
 ```
 ### g) process_resume
 
-- Extract file info
-- Extract text, experience, clean text
-- Load Role-Specific Skills
-- Calculate ATS Score
-    - Inputs : 
-        - resume_text
-        - role_skills
-    - Output :
-        - ats_score – % of skills matched.
+The function processes a resume file for a selected role and user type.
 
-        - matched_skills – Skills found in the resume.
 
-        - missing_skills – Skills not found.
+- Extracts the file type and reads text from the resume.
+- Extracts years of experience from the resume text.
+- Loads role-specific skills.
+- Calculates ATS score, matched skills, and missing skills.
+- Builds a response dictionary containing ats_score, matched_skills, missing_skills, and experience_years.
 
-        - perfect_match_message – Message if all skills match.
+If user_type is "hiring_manager", adds a hiring_decision based on the number of matched skills.
 
-- Build Base Response.
-
-    - Adds congratulatory message if all skills matched.
-
-- Hiring Manager-Specific Logic
-- Make a Hiring Decision
-- Provide Resume URL
+- Inputs: filepath, selected_role, user_type
+- Outputs: Response dictionary with ATS results, experience, and optionally a hiring decision.
+Note: The function does not currently return perfect_match_message or resume URL.
 
 ```
 def process_resume(filepath, selected_role, user_type):
-    file_type = filepath.split('.')[-1].lower()
-    filename = os.path.basename(filepath)
-
+    file_type = filepath.split(".")[-1].lower()
     resume_text = extract_text(filepath, file_type)
-    experience_years = extract_experience(resume_text)
-    resume_clean = clean_text(resume_text)
-    role_skills = load_role_skills(selected_role)
+    experience = extract_experience(resume_text)
 
-    ats_score, matched_skills, missing_skills, perfect_match_message = calculate_ats_score(
-        resume_clean,
-        role_skills
-    )
+    role_skills = load_role_skills(selected_role)
+    ats_score, matched_skills, missing_skills = calculate_ats_score(resume_text, role_skills)
 
     response = {
         "ats_score": ats_score,
         "matched_skills": matched_skills,
         "missing_skills": missing_skills,
-        "experience_years": experience_years
+        "experience_years": experience
     }
 
-    if perfect_match_message:
-        response["perfect_match_message"] = perfect_match_message
-
-    # Only for Hiring Manager
     if user_type == "hiring_manager":
         matched_count = len(matched_skills)
         total_skills = len(role_skills)
@@ -238,19 +200,29 @@ def process_resume(filepath, selected_role, user_type):
 
         response["hiring_decision"] = decision
 
-        # Resume URL instead of text
-        response["resume_url"] = f"http://localhost:5000/uploads/{filename}"
-
     return response
 ```
 
 # 4. Routes
 ### a) Home page
-- Loads a web page (index.html) for the frontend.
+- Loads a web page (index.html) for the index.html.
 ```
 @app.route("/")
 def index():
     return render_template("index.html")
+```
+- Loads a web page (index.html) for the job job_seeker_result.html
+```
+@app.route("/job_seeker_result")
+def job_seeker_result():
+    return render_template("job_seeker_result.html")
+```
+
+- Loads a web page (index.html) for the hiring_manager.html
+```
+@app.route("/hiring_manager_result")
+def hiring_manager_result():
+    return render_template("hiring_manager.html")
 ```
 
 ### b) Serve uploaded files
@@ -272,62 +244,30 @@ def uploaded_file(filename):
     ```"{"error": "Missing resume, user type or role"}"```
 
 - If all input receive correctly save resume on uploads/ .
-- camm process_resume function and return JSON result.
+- call process_resume function and return JSON result.
 
 ```
 @app.route("/scan", methods=["POST"])
 def scan_resume():
     resume = request.files.get("resume")
-    user_type = request.form.get("user_type", "")
-    selected_role = request.form.get("selected_role", "")
+    user_type = request.form.get("user_type")
+    selected_role = request.form.get("selected_role")
 
     if not resume or not user_type or not selected_role:
-        return jsonify({"error": "Missing resume, user type or role"}), 400
+        return jsonify({"error": "Missing resume, user type, or role"}), 400
 
-    filepath = os.path.join(UPLOAD_FOLDER, resume.filename)
-    resume.save(filepath)
+    filename = secure_filename(resume.filename)
+    path = os.path.join(UPLOAD_FOLDER, filename)
+    resume.save(path)
 
-    response = process_resume(filepath, selected_role, user_type)
-    return jsonify(response)
+    result = process_resume(path, selected_role, user_type)
+    result["resume_url"] = f"/uploads/{filename}"
+    result["resume_text"] = extract_text(path, filename.split(".")[-1].lower())
+    return jsonify(result)
 ```
 
 
-### d) List all uploaded resumes
-
-- Returns JSON list of all uploaded PDF/DOCX files.
-
-```
-@app.route("/get_uploaded_resumes")
-def get_uploaded_resumes():
-    files = [f for f in os.listdir(UPLOAD_FOLDER)
-             if f.endswith(('.pdf', '.docx'))]
-    return jsonify(files)
-```
-
-### e)  Scan an existing uploaded resume
-
-- Scans a resume already in the uploads/ folder.
-- Used for hiring managers to re-analyze resumes.
-```
-@app.route("/scan_existing_resume", methods=["POST"])
-def scan_existing_resume():
-    data = request.json
-    filename = data.get("filename")
-    selected_role = data.get("selected_role")
-
-    if not filename or not selected_role:
-        return jsonify({"error": "Missing filename or role"}), 400
-
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-
-    if not os.path.exists(filepath):
-        return jsonify({"error": "File not found"}), 404
-
-    response = process_resume(filepath, selected_role, "hiring_manager")
-    return jsonify(response)
-```
-
-### f) Run the app
+### d) Run the app
 
 - Runs the Flask development server with debugging enabled.
 - By default, it runs on http://localhost:5000.

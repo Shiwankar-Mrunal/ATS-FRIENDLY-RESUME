@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import PyPDF2
-import docx
+# import docx
 import re
 import os
-import json
+import json 
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -25,10 +25,10 @@ def extract_text(file_path, file_type):
             for page in reader.pages:
                 if page.extract_text():
                     text += page.extract_text() + "\n"
-    elif file_type == "docx":
-        doc = docx.Document(file_path)
-        for para in doc.paragraphs:
-            text += para.text + "\n"
+    # elif file_type == "docx":
+    #     doc = docx.Document(file_path)
+    #     for para in doc.paragraphs:
+    #         text += para.text + "\n"
     return text
 
 
