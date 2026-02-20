@@ -1,4 +1,15 @@
-<div id="result" class="result-container"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Seeker Resume Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1 style="font-size: 50px;">Hiring Manager Resume Result</h1>
+
+
+<div id="result" class="result-container">As a Hiring Manager </div>
 
 <script>
 const resultDiv = document.getElementById("result");
@@ -43,6 +54,7 @@ if (!selectedRole) {
                 Calculate ATS Score
             </button>
         </div>
+
 
         <div id="skillResult" style="margin-top:20px;"></div>
     `;
@@ -98,6 +110,21 @@ function showATS() {
                     ${(scanResult.missing_skills || []).map(skill => `<li>${skill}</li>`).join("") || "<li>None</li>"}
                 </ul>
             </div>
+
+            <div class="result-card">
+                <h3>Experience</h3>
+                <p style="font-weight:bold; font-size:28px;">
+                    ${scanResult.experience_years} years
+                </p>
+            </div>
+
+            <div class="result-card">
+                <h3>Resume</h3>
+                <p>Click the link below to view the full resume:</p>
+                <a href="${scanResult.resume_url}" target="_blank" style="font-size:20px; color:#240680;">View Resume</a>
+            </div>
+           
+            
         `;
 
         return;
@@ -149,6 +176,14 @@ function showATS() {
                 ${niceResult.missing.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
             </ul>
         </div>
+
+        <div class="result-card">
+                <h3>Resume</h3>
+                <p>Click the link below to view the full resume:</p>
+                <a href="${scanResult.resume_url}" target="_blank" style="font-size:20px; color:#240680;">View Resume</a>
+            </div>
     `;
 }
 </script>
+
+</body>

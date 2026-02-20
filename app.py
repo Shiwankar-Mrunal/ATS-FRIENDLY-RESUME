@@ -138,6 +138,8 @@ def scan_resume():
     resume.save(path)
 
     result = process_resume(path, selected_role, user_type)
+    result["resume_url"] = f"/uploads/{filename}"
+    result["resume_text"] = extract_text(path, filename.split(".")[-1].lower())
     return jsonify(result)
 
 
