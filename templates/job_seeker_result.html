@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Seeker Resume Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1 style="font-size: 50px;">Job Seeker Resume Result</h1>
+    <div id="result" class="result-container"></div>
+
+    <script>
+        // Get data stored in sessionStorage by script.js
+        const resultDiv = document.getElementById("result");
+        const data = JSON.parse(sessionStorage.getItem("scanResult") || "{}");
+        const selectedRole = sessionStorage.getItem("selectedRole") || "";
+
+        if (!data || Object.keys(data).length === 0) {
+            resultDiv.innerHTML = "<p>No scan data found. Please go back and scan your resume.</p>";
+        } else {
+            let html = `
+                <div class="result-card">
+                    <h3 style="text-align:center; color:#240680;">Selected Role</h3>
+                    <p style="text-align:center; font-size:30px; font-weight:bold; color:#c4380d;">
+                        ${selectedRole}
+                    </p>
+                </div>
+
+                <div class="result-card">
+                    <h3>ATS Score</h3>
+                    <p style="color:#0012b3; font-weight:bold;">${data.ats_score || 0}%</p>
+                </div>
+            `;
+
+            const score = data.ats_score || 0;
+            let feedbackMessage = "";
+            if (score >= 90) feedbackMessage = "Excellent match! Your resume is well aligned with this role.";
+            else if (score >= 70) feedbackMessage = "Good profile, but you can improve by adding missing skills.";
+            else if (score >= 40) feedbackMessage = "Your resume needs improvement for this role.";
+            else feedbackMessage = "Your resume is not suitable for this role.";
+
+            html += `
+                <div class="result-card">
+                    <h3>Feedback</h3>
+                    <p style="color:#00b300; font-weight:bold;">${feedbackMessage}</p>
+                </div>
+            `;
+
+            if ((data.missing_skills || []).length === 0) {
+                html += `
+                    <div class="result-card">
+                        <h3>Missing Skills</h3>
+                        <p style="color:#ee3514; font-weight:bold;">
+                            🎉 Congratulations! All required skills matched!
+                        </p>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="result-card">
+                        <h3>Missing Skills</h3>
+                        <ul style="color:red; font-weight:bold;">
+                            ${(data.missing_skills || []).map(skill => `<li>${skill}</li>`).join("")}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            resultDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

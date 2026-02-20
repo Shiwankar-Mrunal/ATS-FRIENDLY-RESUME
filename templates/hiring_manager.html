@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Seeker Resume Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1 style="font-size: 50px;">Hiring Manager Resume Result</h1>
+
+
+<div id="result" class="result-container">As a Hiring Manager </div>
+
+<script>
+const resultDiv = document.getElementById("result");
+const selectedRole = sessionStorage.getItem("selectedRole") || "";
+const scanResult = JSON.parse(sessionStorage.getItem("scanResult") || "{}");
+
+// Resume text fallback (important)
+const resumeText = (
+    scanResult.resume_text ||
+    (scanResult.matched_skills || []).join(" ")
+).toLowerCase();
+
+if (!selectedRole) {
+    resultDiv.innerHTML = "<p>Please select a role first.</p>";
+} else {
+
+    resultDiv.innerHTML = `
+        <div class="result-card">
+            <h3 style="text-align:center; color:#240680;">Selected Role</h3>
+            <p style="text-align:center; font-size:30px; font-weight:bold; color:#c4380d;">
+                ${selectedRole}
+            </p>
+        </div>
+
+        <div class="result-card">
+            <label><b>Must Have Skills (comma separated)</b></label>
+            <input type="text" id="mustSkills"
+                placeholder="e.g., Python, Django"
+                style="width:100%; padding:8px; font-size:16px;">
+        </div>
+
+        <div class="result-card">
+            <label><b>Nice To Have Skills (comma separated)</b></label>
+            <input type="text" id="niceSkills"
+                placeholder="e.g., Docker, AWS"
+                style="width:100%; padding:8px; font-size:16px;">
+        </div>
+
+        <div class="result-card" style="text-align:center;">
+            <button onclick="showATS()" 
+                style="padding:10px 20px; font-size:18px; background-color:#240680; color:white; border:none; border-radius:5px; cursor:pointer;">
+                Calculate ATS Score
+            </button>
+        </div>
+
+
+        <div id="skillResult" style="margin-top:20px;"></div>
+    `;
+}
+
+function normalize(text) {
+    return text.toLowerCase().trim();
+}
+
+function checkSkills(skillArray) {
+    const matched = [];
+    const missing = [];
+
+    skillArray.forEach(skill => {
+        const normalizedSkill = normalize(skill);
+        if (resumeText.includes(normalizedSkill)) {
+            matched.push(skill);
+        } else {
+            missing.push(skill);
+        }
+    });
+
+    return { matched, missing };
+}
+
+function showATS() {
+
+    const mustInput = document.getElementById("mustSkills").value.trim();
+    const niceInput = document.getElementById("niceSkills").value.trim();
+    const skillResultDiv = document.getElementById("skillResult");
+
+    // 🔥 If BOTH inputs empty → show Job Seeker result
+    if (!mustInput && !niceInput) {
+
+        skillResultDiv.innerHTML = `
+            <div class="result-card">
+                <h3>ATS Score</h3>
+                <p style="color:#0012b3; font-weight:bold; font-size:28px;">
+                    ${scanResult.ats_score}%
+                </p>
+            </div>
+
+            <div class="result-card">
+                <h3>Matched Skills</h3>
+                <ul style="color:green; font-weight:bold;">
+                    ${(scanResult.matched_skills || []).map(skill => `<li>${skill}</li>`).join("") || "<li>None</li>"}
+                </ul>
+            </div>
+
+            <div class="result-card">
+                <h3>Missing Skills</h3>
+                <ul style="color:red; font-weight:bold;">
+                    ${(scanResult.missing_skills || []).map(skill => `<li>${skill}</li>`).join("") || "<li>None</li>"}
+                </ul>
+            </div>
+
+            <div class="result-card">
+                <h3>Experience</h3>
+                <p style="font-weight:bold; font-size:28px;">
+                    ${scanResult.experience_years} years
+                </p>
+            </div>
+
+            <div class="result-card">
+                <h3>Resume</h3>
+                <p>Click the link below to view the full resume:</p>
+                <a href="${scanResult.resume_url}" target="_blank" style="font-size:20px; color:#240680;">View Resume</a>
+            </div>
+           
+            
+        `;
+
+        return;
+    }
+
+    // 🔥 If custom skills entered → calculate new ATS
+
+    const mustSkills = mustInput ? mustInput.split(",").map(s => s.trim()) : [];
+    const niceSkills = niceInput ? niceInput.split(",").map(s => s.trim()) : [];
+
+    const mustResult = checkSkills(mustSkills);
+    const niceResult = checkSkills(niceSkills);
+
+    const totalSkills = mustSkills.length + niceSkills.length;
+    const totalMatched = mustResult.matched.length + niceResult.matched.length;
+
+    const atsScore = totalSkills > 0
+        ? ((totalMatched / totalSkills) * 100).toFixed(2)
+        : 0;
+
+    skillResultDiv.innerHTML = `
+        <div class="result-card">
+            <h3>ATS Score</h3>
+            <p style="color:#0012b3; font-weight:bold; font-size:28px;">
+                ${atsScore}%
+            </p>
+        </div>
+
+        <div class="result-card">
+            <h3>Must Have - Matched</h3>
+            <ul style="color:green; font-weight:bold;">
+                ${mustResult.matched.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            </ul>
+
+            <h3>Must Have - Missing</h3>
+            <ul style="color:red; font-weight:bold;">
+                ${mustResult.missing.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            </ul>
+        </div>
+
+        <div class="result-card">
+            <h3>Nice To Have - Matched</h3>
+            <ul style="color:green; font-weight:bold;">
+                ${niceResult.matched.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            </ul>
+
+            <h3>Nice To Have - Missing</h3>
+            <ul style="color:red; font-weight:bold;">
+                ${niceResult.missing.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            </ul>
+        </div>
+
+        <div class="result-card">
+                <h3>Resume</h3>
+                <p>Click the link below to view the full resume:</p>
+                <a href="${scanResult.resume_url}" target="_blank" style="font-size:20px; color:#240680;">View Resume</a>
+            </div>
+    `;
+}
+</script>
+
+</body>
