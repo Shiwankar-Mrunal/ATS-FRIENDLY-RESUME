@@ -38,35 +38,50 @@
 # Detail Workflow
 ## 1.1 Folder Structure : 
 ```
-    ATS-Resume-Scanner/
-    │
-    ├── Diagram/
-    │   └── ATS-Resume.png
-    │
-    ├── docs/
-    │   └── index.html
-    │
-    ├── skills/
-    │   ├── developer.json
-    │   ├── devops.json
-    │   ├── sap.json
-    │   ├── socanalyst.json
-    │   ├── sre.json
-    │   └── tester.json
-    │
-    ├── static/
-    │   ├── script.js
-    │   └── style.css
-    │
-    ├── templates/
-    │   └── index.html
-    │
-    ├── uploads/
-    │   ├── (Uploaded Resume PDFs)
-    │
-    ├── app.py
-    ├── requirements.txt
-    └── README.md
+
+ATS-FRIENDLY-RESUME/
+│
+├── app.py
+├── requirements.txt
+├── README.md
+│
+├── image-1.png
+├── image-2.png
+├── image-3.png
+├── image-4.png
+├── image.png
+│
+├── Diagram/
+│   ├── ATS-Resume-Version2.png
+│   └── ATS-Resume.png
+│
+├── docs/
+│   └── index.html
+│
+├── skills/
+│   ├── developer.json
+│   ├── devops.json
+│   ├── sap.json
+│   ├── socanalyst.json
+│   ├── sre.json
+│   └── tester.json
+│
+├── Specification/
+│   ├── BackEnd/
+│   │   └── README.md
+│   └── FrontEnd/
+│       └── README.md
+│
+├── static/
+│   ├── script.js
+│   └── style.css
+│
+├── templates/
+│   ├── hiring_manager.html
+│   ├── index.html
+│   └── job_seeker_result.html
+│
+└── uploads/
 
  ```
 
@@ -114,22 +129,34 @@ https://github.com/Shiwankar-Mrunal/ATS-FRIENDLY-RESUME/tree/main/Specification/
 ### "***Display***" 
     - ATS Score
     - Feedback for Job Seeker
-    - Missing skills for improvement
+    - Missing skills for improvement/ Congratulations message if all skills are matched
 
-![alt text](image-2.png)
+
+![alt text](image-5.png)
 
 # 2. Select Scan as HIRING manager : 
 ### "***Display***" 
 
-    - Display ATS Score
-    - Hiring Decision
-    - Matched Skills
-    - Missing Skills
-    - Experience
-    - View Resume
-    - Click here to open resume
 
-![alt text](image-3.png)
+
+![alt text](image-6.png)
+
+## For Job Seeker two input fields are provided 
+
+- Must Have Skills
+- Nice To Have Skils
+
+## Output without input fields :
+
+###  Same output for job seeker and Hiring Manager
+
+![alt text](image-7.png)
+
+## Output with Input fields :
+
+### Output will based on skills matched
+
+![alt text](image-8.png)
 
 
 # Testing ATS Scanner For RealTime
