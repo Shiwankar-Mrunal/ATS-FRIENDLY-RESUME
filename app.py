@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 UPLOAD_FOLDER = "uploads"
-SKILLS_FOLDER = "skills"
+SKILLS_FOLDER = os.path.realpath(os.path.join(os.path.dirname(__file__), "skills"))
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -59,7 +59,7 @@ def load_role_skills(role):
         return []
 
     # Build an absolute, normalized path under SKILLS_FOLDER.
-    skills_root = os.path.realpath(SKILLS_FOLDER)
+    skills_root = SKILLS_FOLDER
     file_path = os.path.realpath(os.path.join(skills_root, filename))
 
     # Ensure the resolved path is inside the skills directory.
