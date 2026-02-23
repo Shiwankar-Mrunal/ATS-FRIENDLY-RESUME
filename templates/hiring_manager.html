@@ -155,25 +155,50 @@ function showATS() {
 
         <div class="result-card">
             <h3>Must Have - Matched</h3>
-            <ul style="color:green; font-weight:bold;">
-                ${mustResult.matched.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            <ul class="must-matched-list" style="color:green; font-weight:bold;">
             </ul>
 
             <h3>Must Have - Missing</h3>
-            <ul style="color:red; font-weight:bold;">
-                ${mustResult.missing.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            <ul class="must-missing-list" style="color:red; font-weight:bold;">
             </ul>
         </div>
 
         <div class="result-card">
             <h3>Nice To Have - Matched</h3>
-            <ul style="color:green; font-weight:bold;">
-                ${niceResult.matched.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            <ul class="nice-matched-list" style="color:green; font-weight:bold;">
             </ul>
 
             <h3>Nice To Have - Missing</h3>
-            <ul style="color:red; font-weight:bold;">
-                ${niceResult.missing.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}
+            <ul class="nice-missing-list" style="color:red; font-weight:bold;">
+
+    // Safely populate skill lists using textContent to avoid interpreting user input as HTML
+    const mustMatchedUl = skillResultDiv.querySelector(".must-matched-list");
+    const mustMissingUl = skillResultDiv.querySelector(".must-missing-list");
+    const niceMatchedUl = skillResultDiv.querySelector(".nice-matched-list");
+    const niceMissingUl = skillResultDiv.querySelector(".nice-missing-list");
+
+    function populateList(ulElement, items) {
+        if (!ulElement) {
+            return;
+        }
+        ulElement.innerHTML = "";
+        if (!items || items.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "None";
+            ulElement.appendChild(li);
+            return;
+        }
+        items.forEach(function (s) {
+            const li = document.createElement("li");
+            li.textContent = s;
+            ulElement.appendChild(li);
+        });
+    }
+
+    populateList(mustMatchedUl, mustResult.matched);
+    populateList(mustMissingUl, mustResult.missing);
+    populateList(niceMatchedUl, niceResult.matched);
+    populateList(niceMissingUl, niceResult.missing);
             </ul>
         </div>
 
