@@ -53,10 +53,9 @@ def load_role_skills(role):
 
     filename = f"{role.lower().replace(' ', '_')}.json"
 
-    # Build an absolute, normalized path and ensure it stays within SKILLS_FOLDER
-    # Build an absolute, normalized path and ensure it stays within SKILLS_FOLDER
+    # Build an absolute, normalized path under SKILLS_FOLDER
     skills_root = os.path.realpath(SKILLS_FOLDER)
-    file_path = os.path.realpath(os.path.normpath(os.path.join(skills_root, filename)))
+    file_path = os.path.realpath(os.path.join(skills_root, filename))
 
     # Ensure the resolved path is inside the skills directory
     if os.path.commonpath([skills_root, file_path]) != skills_root:
