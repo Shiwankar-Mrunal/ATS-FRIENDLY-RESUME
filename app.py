@@ -46,8 +46,21 @@ def extract_experience(resume_text):
 
 
 def load_role_skills(role):
+    # Validate role to avoid directory traversal or unsafe characters
+    # Allow only letters, numbers, spaces, underscores, and hyphens
+    if not re.fullmatch(r"[A-Za-z0-9 _-]+", str(role)):
+        return []
+
     filename = f"{role.lower().replace(' ', '_')}.json"
-    file_path = os.path.join(SKILLS_FOLDER, filename)
+
+    # Build an absolute, normalized path and ensure it stays within SKILLS_FOLDER
+    skills_root = os.path.abspath(SKILLS_FOLDER)
+    file_path = os.path.abspath(os.path.join(skills_root, filename))
+
+    # Ensure the resolved path is inside the skills directory
+    if os.path.commonpath([skills_root, file_path]) != skills_root:
+        return []
+
     if os.path.exists(file_path):
         with open(file_path, "r") as f:
             return json.load(f).get("skills", [])
