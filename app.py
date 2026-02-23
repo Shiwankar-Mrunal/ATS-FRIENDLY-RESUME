@@ -46,18 +46,19 @@ def extract_experience(resume_text):
 
 
 def load_role_skills(role):
-    # Validate role to avoid directory traversal or unsafe characters
-    # Allow only letters, numbers, spaces, underscores, and hyphens
+    # Validate role to avoid directory traversal or unsafe characters.
+    # Allow only letters, numbers, spaces, underscores, and hyphens.
     if not re.fullmatch(r"[A-Za-z0-9 _-]+", str(role)):
         return []
 
-    filename = f"{role.lower().replace(' ', '_')}.json"
+    # Construct a simple filename based on the role.
+    filename = f"{str(role).lower().replace(' ', '_')}.json"
 
-    # Build an absolute, normalized path under SKILLS_FOLDER
+    # Build an absolute, normalized path under SKILLS_FOLDER.
     skills_root = os.path.realpath(SKILLS_FOLDER)
     file_path = os.path.realpath(os.path.join(skills_root, filename))
 
-    # Ensure the resolved path is inside the skills directory
+    # Ensure the resolved path is inside the skills directory.
     if os.path.commonpath([skills_root, file_path]) != skills_root:
         return []
 
@@ -65,7 +66,6 @@ def load_role_skills(role):
         with open(file_path, "r") as f:
             return json.load(f).get("skills", [])
     return []
-
 
 def calculate_ats_score(resume_text, role_skills):
     resume_text = normalize_text(resume_text)
