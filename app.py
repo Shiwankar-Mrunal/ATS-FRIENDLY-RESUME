@@ -54,6 +54,10 @@ def load_role_skills(role):
     # Construct a simple filename based on the role.
     filename = f"{str(role).lower().replace(' ', '_')}.json"
 
+    # Extra safety: ensure the derived filename cannot contain path separators.
+    if os.sep in filename or (os.altsep and os.altsep in filename):
+        return []
+
     # Build an absolute, normalized path under SKILLS_FOLDER.
     skills_root = os.path.realpath(SKILLS_FOLDER)
     file_path = os.path.realpath(os.path.join(skills_root, filename))
